@@ -100,10 +100,10 @@ export function createServer() {
       const sleuthName = roomSleuths.get(socket.roomId);
       if (sleuthName) {
         // Send blue colored message revealing the sleuth
-        io.to(socket.roomId).emit('message', `#bb86fcThe sleuth is ${sleuthName}!`);
+        io.to(socket.roomId).emit('message', `#bb86fcThe imposter is ${sleuthName}!`);
       } else {
         // No sleuth has been selected yet
-        socket.emit('message', '#bb86fcNo sleuth has been selected yet. Send a secret word first.');
+        socket.emit('message', '#bb86fcNo imposter has been selected yet. Send a secret word first.');
       }
     });
   });

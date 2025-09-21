@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Synonym Sleuth</title>
+<style>
+  /* General page styling */
+  body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+  padding: 20px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#messages {
+  flex-grow: 1;
+  border: 1.5px solid #444;
+  background-color: #1e1e2f;
+  color: #e0e0e0;
+  width: 100%;
+  max-width: 600px;
+  overflow-y: auto; /* Scrollable content */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(128, 0, 255, 0.7);
+  margin-bottom: 20px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+
+  #messages div {
+    margin-bottom: 8px;
+  }
+
+  form#chatForm {
+    display: flex;
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+
+  #msgInput {
+    flex-grow: 1;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: 1.5px solid #444;
+    border-radius: 6px 0 0 6px;
+    background-color: #2a2a3d;
+    color: #e0e0e0;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+
+  #msgInput:focus {
+    border-color: #9b59b6;
+    box-shadow: 0 0 8px #9b59b6;
+    background-color: #3a3a57;
+  }
+
+  form#chatForm button {
+    background-color: #7d3cff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  form#chatForm button:hover {
+    background-color: #5e2ecc;
+  }
+
+  /* Button row container for secret word & reveal sleuth buttons */
+  #buttonRow {
+    display: flex;
+    width: 100%;
+    max-width: 600px;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  #buttonRow button {
+    flex: 1;
+    border-radius: 6px;
+    padding: 12px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #7d3cff;
+    color: white;
+    border: none;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Rounded corners adjusted for side-by-side buttons */
+  #secretWordBtn {
+    border-radius: 6px 0 0 6px;
+  }
+
+  #revealSleuthBtn {
+    border-radius: 0 6px 6px 0;
+  }
+
+  #buttonRow button:hover {
+    background-color: #5e2ecc;
+  }
+
+  /* Responsive adjustment */
+  @media (max-width: 650px) {
+    #messages, form#chatForm, #buttonRow {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div id="messages"></div>
+
+  <form id="chatForm" autocomplete="off">
+    <input id="msgInput" name="msgInput" type="text" autocomplete="off" placeholder="Type your message..." required />
+    <button type="submit">Send</button>
+  </form>
+
+  <div id="buttonRow">
+    <button id="secretWordBtn">Send secret word</button>
+    <button id="revealSleuthBtn">Reveal Sleuth</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Parse query params for roomId and name
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get('r');
+    const name = params.get('n');
+
+    if (!roomId || !name) {
+      window.location.href = '/login';
+    }
+
+    const messagesDiv = document.getElementById('messages');
+    const chatForm = document.getElementById('chatForm');
+    const msgInput = document.getElementById('msgInput');
+
+    function appendMessage(msg) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function appendColorMessage(msg, color) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      div.style.color = color;
+      div.style.fontWeight = 'bold';
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    socket.emit('joinRoom', { roomId, name });
+
+    socket.on('message', msg => {
+      if (msg.startsWith('#')) {
+        const color = msg.substring(0, 7);
+        const messageText = msg.substring(7);
+        appendColorMessage(messageText, color);
+      } else {
+        appendMessage(msg);
+      }
+    });
+
+    chatForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const msg = msgInput.value.trim();
+      if (msg) {
+        socket.emit('chatMessage', msg);
+        msgInput.value = '';
+        msgInput.focus();
+      }
+    });
+
+    document.getElementById('secretWordBtn').addEventListener('click', () => {
+      socket.emit('sendSecretWord');
+    });
+
+    document.getElementById('revealSleuthBtn').addEventListener('click', () => {
+      socket.emit('revealSleuth');
+    });
+  </script>
+</body>
+</html>

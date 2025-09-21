@@ -78,7 +78,7 @@ export function createServer() {
 
       // Send special message to the selected sleuth
       if (sleuthSocket) {
-        sleuthSocket.emit('message', '#FF0000You are the Synonym Sleuth. Blend in');
+        sleuthSocket.emit('message', '#FF0000You are the imposter. Blend in');
         // Store sleuth information for this room
         roomSleuths.set(socket.roomId, sleuthSocket.name);
       }
